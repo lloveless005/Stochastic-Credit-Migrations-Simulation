@@ -19,14 +19,14 @@ def newRating(curRating, mat):
     # get new rating based on current rating (Markov chain)
     return np.random.choice(range(8), p = mat[curRating])
 
-# rate = Pdefault * (1 - Recovery rate) + risk free rate
 # assume recovery rate is 0.4 for all companies
 # risk free rate on 2-9-26 is 0.03442
 # use geom. average Pdefault over time remaining on loan
 def getInterest(pDef, yearsRem, rating):
-    ann = 1 - (1 - pDef)**(1 / yearsRem)    # annualized interest rate
+    ann = 1 - (1 - pDef)**(1 / yearsRem)    # annualized probability of default
 
-    spread = (1 + 0.03442 - ann * 0.4) / (1 - ann) - 1
+    # derived from (1 + Interest) * (1 - PD) + (Recovery * PD) = 1 + risk free rate
+    spread = (1 + 0.03442 - ann * 0.4) / (1 - ann) - 1    
 
     # different profit margins for each interest rate
     if rating < 2:
@@ -63,9 +63,9 @@ ratings = {0: "AAA", 1: "AA", 2: "A", 3: "BBB", 4: "BB", 5: "B", 6: "C", 7: "D"}
 #            [0, 0, 0, 0, 0, 0, 0, 0, 1]]
 
 # Redistribute NR
-# AAA given a chance to demote
+# AAA given a chance to demote and AA to promote
 yearmat_clean = [[0.98, 0.02, 0, 0, 0, 0, 0, 0], 
-                [0, 0.9656, 0.0344, 0, 0, 0, 0, 0], 
+                [0.02, 0.9456, 0.0344, 0, 0, 0, 0, 0], 
                 [0, 0.0087, 0.9663, 0.0250, 0, 0, 0, 0], 
                 [0, 0, 0.0258, 0.9573, 0.0134, 0.0017, 0.0009, 0.0009], 
                 [0, 0, 0.0008, 0.0383, 0.9266, 0.026, 0.0027, 0.0056], 
@@ -83,7 +83,7 @@ rating = genRating()
 yearsRem = 10
 loops = yearsRem
 
-myBal = 0           # give 10000 to company as loan
+myBal = 0    # give 10000 to company as loan
 compBal = 10000
 
 for i in range(loops):
