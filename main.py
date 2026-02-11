@@ -82,6 +82,15 @@ yearmat_a = np.array(yearmat_clean)
 
 myBal = 0
 totalLosses = 0
+loanLife = 10
+
+# generate matrices for years until loan matures
+# reduced simulation time by 30%
+rows, cols = yearmat_a.shape
+
+matrices = np.zeros((loanLife, rows, cols))
+for k in range(loanLife):
+    matrices[k] = matpow(yearmat_a, loanLife - k)
 
 sims = 10000
 
@@ -90,20 +99,19 @@ startTime = time.perf_counter()
 for m in range(sims):
 
     rating = genRating()
-    yearsRem = 10
-    loops = yearsRem
+    yearsRem = loanLife
 
     gain = 0    # give 10000 to company as loan
     loss = 10000
 
-    for i in range(loops):
+    for i in range(loanLife):
         label = ratings[rating]
 
         # our money is reinvested at the risk free rate
         gain *= 1.03442
 
         if loss > 0:
-            PDtotal = matpow(yearmat_a, yearsRem)[rating][7]
+            PDtotal = matrices[loanLife - yearsRem][rating][7]
             interest = getInterest(PDtotal, yearsRem, rating)
 
             # apply interest
@@ -131,15 +139,15 @@ for m in range(sims):
 endTime = time.perf_counter()
 elapsed = endTime - startTime
 
-print(f"\nWe now have ${myBal:.2f} and lost ${totalLosses:.2f}.")
+print(f"\nWe now have ${myBal:,.2f} and lost ${totalLosses:,.2f} on defaults.")
 
-rfr = sims * 10000 * (1.03442 ** loops)
+rfr = sims * 10000 * (1.03442 ** loanLife)
 profit = myBal - rfr
 
 totalPct = (myBal / (sims * 10000)) * 100
-annualPct = ((totalPct/100)**(1 / loops) - 1) * 100
+annualPct = ((totalPct/100)**(1 / loanLife) - 1) * 100
 
-print(f"We profited ${profit:.2f} over the risk-free rate of ${rfr:.2f}.")
+print(f"We profited ${profit:,.2f} over the risk-free rate of ${rfr:,.2f}.")
 print(f"We got a total profit of {totalPct:.2f}%.")
 print(f"Yearly profit of {annualPct:.2f}%.")
-print(f"Program took {elapsed:.4f} seconds to run.")
+print(f"Program took {elapsed:.4f} seconds to run.\n")
