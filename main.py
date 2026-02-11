@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 #
 #
@@ -77,57 +78,68 @@ yearmat_a = np.array(yearmat_clean)
 
 #
 #
-# Simulation for one company
+# Simulation
 
-rating = genRating()
-yearsRem = 10
-loops = yearsRem
+myBal = 0
+totalLosses = 0
 
-myBal = 0    # give 10000 to company as loan
-compBal = 10000
+sims = 10000
 
-for i in range(loops):
-    label = ratings[rating]
-    print(f"\nYear {loops+1-yearsRem}")
-    print(f"Company is rated {label} with {yearsRem} years remaining.")
+startTime = time.perf_counter()
 
-    # our money is reinvested at the risk free rate
-    myBal *= 1.03442
+for m in range(sims):
 
-    print(f"My balance is ${myBal:.2f}.")
+    rating = genRating()
+    yearsRem = 10
+    loops = yearsRem
 
-    if compBal > 0:
-        PDtotal = matpow(yearmat_a, yearsRem)[rating][7]
-        interest = getInterest(PDtotal, yearsRem, rating)
+    gain = 0    # give 10000 to company as loan
+    loss = 10000
 
-        print(f"Probability of default is {PDtotal:.4f}")
-        print(f"Interest rate is {interest:.4f}")
+    for i in range(loops):
+        label = ratings[rating]
 
-        # apply interest
-        compBal *= (1 + interest)
+        # our money is reinvested at the risk free rate
+        gain *= 1.03442
 
-        rating = newRating(rating, yearmat_a)
+        if loss > 0:
+            PDtotal = matpow(yearmat_a, yearsRem)[rating][7]
+            interest = getInterest(PDtotal, yearsRem, rating)
 
-        if rating == 7:
-            # recovery of balance
-            myBal += 0.4 * compBal
-            compBal = 0
-        else:
-            # loan payment
-            payment = compBal / yearsRem
-            print(f"Company paid ${payment:.2f}.")
+            # apply interest
+            loss *= (1 + interest)
 
-            myBal += payment
-            compBal -= payment
+            rating = newRating(rating, yearmat_a)
 
-    else:
-        print("Company went default.")
+            if rating == 7:
+                # recovery of balance
+                gain += 0.4 * loss
+                totalLosses += loss
+                loss = 0
+            else:
+                # loan payment
+                payment = loss / yearsRem
 
-    yearsRem -= 1
+                gain += payment
+                loss -= payment
 
-print(f"\nWe now have ${myBal:.2f} and the company has ${compBal:.2f}")
 
-rfr = 10000 * (1.03442 ** loops)
+        yearsRem -= 1
+
+    myBal += gain
+
+endTime = time.perf_counter()
+elapsed = endTime - startTime
+
+print(f"\nWe now have ${myBal:.2f} and lost ${totalLosses:.2f}.")
+
+rfr = sims * 10000 * (1.03442 ** loops)
 profit = myBal - rfr
 
-print(f"We profited ${profit:.2f} over the risk-free rate.")
+totalPct = (myBal / (sims * 10000)) * 100
+annualPct = ((totalPct/100)**(1 / loops) - 1) * 100
+
+print(f"We profited ${profit:.2f} over the risk-free rate of ${rfr:.2f}.")
+print(f"We got a total profit of {totalPct:.2f}%.")
+print(f"Yearly profit of {annualPct:.2f}%.")
+print(f"Program took {elapsed:.4f} seconds to run.")
