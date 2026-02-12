@@ -28,7 +28,10 @@ def getInterest(pDef, yearsRem, rating):
     ann = 1 - (1 - pDef)**(1 / yearsRem)    # annualized probability of default
 
     # derived from (1 + Interest) * (1 - PD) + (Recovery * PD) = 1 + risk free rate
-    spread = (1 + 0.03442 - ann * 0.4) / (1 - ann) - 1    
+    loanRate = (1 + 0.03442 - ann * 0.4) / (1 - ann) - 1    
+
+    # # derived from PD = (Interest - rfr) / (1 - recovery)
+    # loanRate = ann * 0.6 + 0.03442
 
     # different profit margins for each interest rate
     if rating < 2:
@@ -41,7 +44,7 @@ def getInterest(pDef, yearsRem, rating):
         margin = 0.1
 
     # multiply the rate so that we are earning money vs charging the rfr equivalent
-    rate = margin + spread
+    rate = margin + loanRate
 
     return rate
 
