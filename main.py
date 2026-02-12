@@ -9,6 +9,7 @@ def matpow(matrix, times):
     return np.linalg.matrix_power(matrix, times)
 
 # Number of companies per rating: {7, 285, 1399, 1848, 1190, 1744, 342} corresponding to AAA, AA, ...
+# ratings = {0: "AAA", 1: "AA", 2: "A", 3: "BBB", 4: "BB", 5: "B", 6: "C", 7: "D"}
 def genRating():
     counts = np.array([7, 285, 1399, 1848, 1190, 1744, 342])
     probs = counts / counts.sum()
@@ -49,8 +50,6 @@ def getInterest(pDef, yearsRem, rating):
 #
 #
 # MAIN
-# Correspond rating to matrix row
-ratings = {0: "AAA", 1: "AA", 2: "A", 3: "BBB", 4: "BB", 5: "B", 6: "C", 7: "D"}
 
 # Transition matrix for corporate credit ratings in one year
 # yearmat = [[1, 0, 0, 0, 0, 0, 0, 0, 0], 
@@ -65,14 +64,14 @@ ratings = {0: "AAA", 1: "AA", 2: "A", 3: "BBB", 4: "BB", 5: "B", 6: "C", 7: "D"}
 
 # Redistribute NR
 # AAA given a chance to demote and AA to promote
-yearmat_clean = [[0.98, 0.02, 0, 0, 0, 0, 0, 0], 
-                [0.02, 0.9456, 0.0344, 0, 0, 0, 0, 0], 
-                [0, 0.0087, 0.9663, 0.0250, 0, 0, 0, 0], 
-                [0, 0, 0.0258, 0.9573, 0.0134, 0.0017, 0.0009, 0.0009], 
-                [0, 0, 0.0008, 0.0383, 0.9266, 0.026, 0.0027, 0.0056], 
-                [0, 0, 0, 0.0007, 0.0509, 0.8798, 0.0375, 0.0311], 
-                [0, 0, 0, 0, 0, 0.1234, 0.5335, 0.3431], 
-                [0, 0, 0, 0, 0, 0, 0, 1]]
+yearmat_clean = [[0.98, 0.02,   0,      0,      0,      0,      0,      0],      # AAA
+                [0.02,  0.9456, 0.0344, 0,      0,      0,      0,      0],      # AA
+                [0,     0.0087, 0.9663, 0.0250, 0,      0,      0,      0],      # A
+                [0,     0,      0.0258, 0.9573, 0.0134, 0.0017, 0.0009, 0.0009], # BBB
+                [0,     0,      0.0008, 0.0383, 0.9266, 0.026,  0.0027, 0.0056], # BB
+                [0,     0,      0,      0.0007, 0.0509, 0.8798, 0.0375, 0.0311], # B
+                [0,     0,      0,      0,      0,      0.1234, 0.5335, 0.3431], # C
+                [0,     0,      0,      0,      0,      0,      0,      1]]      # D
 
 yearmat_a = np.array(yearmat_clean)
 
@@ -105,8 +104,6 @@ for m in range(sims):
     loss = 10000
 
     for i in range(loanLife):
-        label = ratings[rating]
-
         # our money is reinvested at the risk free rate
         gain *= 1.03442
 
@@ -139,7 +136,8 @@ for m in range(sims):
 endTime = time.perf_counter()
 elapsed = endTime - startTime
 
-print(f"\nWe now have ${myBal:,.2f} and lost ${totalLosses:,.2f} on defaults.")
+print(f"\nInitial investment of ${sims*10000:,.2f}.")
+print(f"We now have ${myBal:,.2f} and lost ${totalLosses:,.2f} on defaults.")
 
 rfr = sims * 10000 * (1.03442 ** loanLife)
 profit = myBal - rfr
