@@ -33,17 +33,28 @@ def getInterest(pDef, yearsRem, rating, RR):
     # loanRate = ann * 0.6 + 0.03442
 
     # different profit margins for each interest rate
-    if rating < 2:
-        margin = 0.004
-    elif rating < 4:
-        margin = 0.015
-    elif rating < 6:
-        margin = 0.04
-    else:
-        margin = 0.1
+    # https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ratings.htm
+    match rating:
+        case 0:
+            margin = 0.004
+        case 1:
+            margin = 0.0055
+        case 2:
+            margin = 0.0078
+        case 3:
+            margin = 0.0111
+        case 4:
+            margin = 0.0184
+        case 5:
+            margin = 0.0509
+        case 6:
+            margin = 0.10
 
     # multiply the rate so that we are earning money vs charging the rfr equivalent
     rate = margin + loanRate
+
+    # account for lifetime of loan
+    rate += np.sqrt(yearsRem)/100
 
     return rate
 
@@ -55,7 +66,7 @@ def getSalesRate(RR, PD):
 
     return RR + (1 - RR) * (1 - PD) - margin
 
-def riskSim(matrix, riskTolerance, RR, loanLife, sims):
+def riskSim(matrix, riskTolerance, RR, loanLife, sims, investment):
     myBal = 0
     totalLosses = 0
 
@@ -70,8 +81,8 @@ def riskSim(matrix, riskTolerance, RR, loanLife, sims):
         rating = genRating()
         yearsRem = loanLife
 
-        gain = 0    # give 10000 to company as loan
-        loss = 10000
+        gain = 0 
+        loss = investment
 
         for i in range(loanLife):
             # our money is reinvested at the risk free rate
@@ -147,37 +158,3 @@ yearmat_clean = [[0.98, 0.02,   0,      0,      0,      0,      0,      0],     
                 [0,     0,      0,      0,      0,      0,      0,      1]]      # D
 
 yearmat_a = np.array(yearmat_clean)
-
-#
-#
-# Simulation
-
-# if PD is above this amount we will sell the loan
-riskTolerance = .75
-
-# assume we can recover RR% of the loan on default
-RR = 0.4
-loanLife = 10
-sims = 10000
-
-startTime = time.perf_counter()
-
-myBal, totalLosses = riskSim(yearmat_a, riskTolerance, RR, loanLife, sims)
-
-endTime = time.perf_counter()
-elapsed = endTime - startTime
-
-print(f"\nInitial investment of ${sims*10000:,.2f}.")
-print(f"Our risk tolerance is {riskTolerance*100}%.")
-print(f"We now have ${myBal:,.2f} and lost ${totalLosses:,.2f} on defaults.")
-
-rfr = sims * 10000 * (1.03442 ** loanLife)
-profit = myBal - rfr
-
-totalPct = (myBal / (sims * 10000)) * 100
-annualPct = ((totalPct/100)**(1 / loanLife) - 1) * 100
-
-print(f"We profited ${profit:,.2f} over the risk-free rate of ${rfr:,.2f}.")
-print(f"We got a total profit of {totalPct:.2f}%.")
-print(f"Yearly profit of {annualPct:.2f}%.")
-print(f"Program took {elapsed:.4f} seconds to run.\n")
