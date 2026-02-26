@@ -1,6 +1,9 @@
 import numpy as np
 import time
 
+# last updated 2-25-26
+RISKFREE = 0.03539
+
 #
 #
 # FUNCTIONS
@@ -21,16 +24,15 @@ def newRating(curRating, mat):
     # get new rating based on current rating (Markov chain)
     return np.random.choice(range(8), p = mat[curRating])
 
-# risk free rate on 2-9-26 is 0.03442
 # use geom. average Pdefault over time remaining on loan
 def getInterest(pDef, yearsRem, rating, RR):
     ann = 1 - (1 - pDef)**(1 / yearsRem)    # annualized probability of default
 
     # derived from (1 + Interest) * (1 - PD) + (Recovery * PD) = 1 + risk free rate
-    loanRate = (1 + 0.03442 - ann * RR) / (1 - ann) - 1    
+    loanRate = (1 + RISKFREE - ann * RR) / (1 - ann) - 1    
 
     # # derived from PD = (Interest - rfr) / (1 - recovery)
-    # loanRate = ann * 0.6 + 0.03442
+    # loanRate = ann * 0.6 + RISKFREE
 
     # different profit margins for each interest rate
     # https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ratings.htm
@@ -86,7 +88,7 @@ def riskSim(matrix, riskTolerance, RR, loanLife, sims, investment):
 
         for i in range(loanLife):
             # our money is reinvested at the risk free rate
-            gain *= 1.03442
+            gain *= 1 + RISKFREE
 
             if loss > 0:
                 PDtotal = matrices[yearsRem][rating][7]
