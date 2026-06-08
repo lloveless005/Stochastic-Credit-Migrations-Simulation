@@ -2,7 +2,7 @@
 
 This repository contains a simulation engine and an interactive dashboard for pricing corporate loans and analyzing portfolio risk. The model leverages stochastic processes to simulate the migration of S&P credit ratings over time, using this information to price loans and manage a portfolio based on a defined risk tolerance.
 
-This project was created for the MATH 541 Stochastic Processes course.
+This project was created for MATH 541 Stochastic Processes honors credit.
 
 ## Core Concepts
 
